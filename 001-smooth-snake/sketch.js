@@ -1,7 +1,6 @@
 const BALLS = [];
 
-//test
-// 123
+
 const COLLISIONS = {
   ballPong: function ({ ball, pong }) { //https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment
     if (ball.y + ball.radius >= height - pong.height && ball.x >= pong.x && ball.x <= pong.x + pong.width) {
