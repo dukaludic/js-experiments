@@ -7,13 +7,57 @@ const COLLISIONS = {
     }
   },
   ballFellThrough: function ({ ball, pong }) {
+    //propadanje lopte
     if (ball.y + ball.radius > height) {
       ball.spawn(200, 300);
-      if (pong.lives > 0) {
-        pong.lives = pong.lives - 1;
-        console.log(pong.lives)
-      } else if (pong.lives === 0) {
-        pong.alive = false;
+      ball.dies(pong);
+    }
+  },
+  ballSquare: function (ball) {
+    //ODBIJANJE OD KOCKICA
+    for (let i = 0; i < squares.length; i++) {
+      if (squares[i].exists) {
+        if (ball.y > squares[i].y && ball.y < squares[i].y + squares[i].size && ball.x > squares[i].x && ball.x < squares[i].x + squares[i].size) {
+          ball.speedY = -ball.speedY;
+          squares[i].exists = false;
+          // print(squares[i].exists);
+        }
+      }
+    }
+  },
+  canvasBounce: function (ball) {
+    // BOUNCING of canvas
+    if (ball.x + ball.radius > width || ball.x - ball.radius < 0) {
+      ball.speedX = -ball.speedX;
+    }
+
+    if (ball.y - ball.radius < 0) {
+      ball.speedY = -ball.speedY;
+    };
+  },
+  snakeSquare: function (snake, squares = []) {
+    // Udarac zmije u kocku
+    for (let i = 0; i < squares.length; i++) {
+      if (squares[i].exists) {
+        if (squares[i].x < SNAKE_BODY[0].x + SNAKE_BODY[0].size &&
+          squares[i].x + squares[i].size > SNAKE_BODY[0].x &&
+          squares[i].y < SNAKE_BODY[0].y + SNAKE_BODY[0].size &&
+          squares[i].y + squares[i].size > SNAKE_BODY[0].y) {
+          SNAKE_BODY[0].dir = 'none';
+          SNAKE_BODY[0].alive = false;
+          SNAKE_BODY[0].speed = 0;
+        }
+      }
+    }
+  },
+  snakeBall: function (snake, ball) {
+    // Udarac lopte u zmiju
+    for (let i = 0; i < SNAKE_BODY.length; i++) {
+      if (BALLS[0].y > SNAKE_BODY[i].y && BALLS[0].y < SNAKE_BODY[i].y + SNAKE_BODY[i].size && BALLS[0].x > SNAKE_BODY[i].x && BALLS[0].x < SNAKE_BODY[i].x + SNAKE_BODY[i].size) {
+        SNAKE_BODY[0].dir = 'none';
+        SNAKE_BODY[0].alive = false;
+        SNAKE_BODY[0].speed = 0;
+        console.log('hit')
       }
     }
   }
@@ -21,14 +65,22 @@ const COLLISIONS = {
 
 function createBall() {
   const ball = {
-    x: 50,
-    y: 50,
+    x: 100,
+    y: 100,
     radius: 10,
     speedX: 3,
     speedY: 3,
     spawn: function (newX, newY) {
       this.x = newX;
       this.y = newY;
+    },
+    dies: function (pong) {
+      if (pong.lives > 0) {
+        pong.lives = pong.lives - 1;
+        console.log(pong.lives)
+      } else if (pong.lives === 0) {
+        pong.alive = false;
+      }
     },
     bounceY: function () {
       this.speedY = -this.speedY;
@@ -51,31 +103,31 @@ function createBall() {
       if (this.y - this.radius < 0) {
         this.speedY = -this.speedY;
       };
-      if (this.y + this.radius > height) {
-        this.spawn(200, 300);
-        if (pong.lives > 0) {
-          pong.lives = pong.lives - 1;
-          console.log(pong.lives)
-        } else if (pong.lives === 0) {
-          pong.alive = false;
-        }
-      };
+      // if (this.y + this.radius > height) {
+      //   this.spawn(200, 300);
+      //   if (pong.lives > 0) {
+      //     pong.lives = pong.lives - 1;
+      //     console.log(pong.lives)
+      //   } else if (pong.lives === 0) {
+      //     pong.alive = false;
+      //   }
+      // };
       // ODBIJANJE OD PONG
-      if (this.y + this.radius >= height - pong.height && this.x >= pong.x && this.x <= pong.x + pong.width) {
-        this.speedY = -this.speedY;
-      }
+      // if (this.y + this.radius >= height - pong.height && this.x >= pong.x && this.x <= pong.x + pong.width) {
+      //   this.speedY = -this.speedY;
+      // }
 
 
-      //ODBIJANJE OD KOCKICA
-      for (let i = 0; i < squares.length; i++) {
-        if (squares[i].exists) {
-          if (this.y > squares[i].y && this.y < squares[i].y + squares[i].size && this.x > squares[i].x && this.x < squares[i].x + squares[i].size) {
-            this.speedY = -this.speedY;
-            squares[i].exists = false;
-            // print(squares[i].exists);
-          }
-        }
-      }
+      // //ODBIJANJE OD KOCKICA
+      // for (let i = 0; i < squares.length; i++) {
+      //   if (squares[i].exists) {
+      //     if (this.y > squares[i].y && this.y < squares[i].y + squares[i].size && this.x > squares[i].x && this.x < squares[i].x + squares[i].size) {
+      //       this.speedY = -this.speedY;
+      //       squares[i].exists = false;
+      //       // print(squares[i].exists);
+      //     }
+      //   }
+      // }
     },
     tick: function (pong, squares) {
       this.update(pong, squares);
@@ -84,6 +136,8 @@ function createBall() {
   }
   return ball;
 }
+
+BALLS[0] = new createBall;
 
 
 const SNAKE_BODY = [];
@@ -198,10 +252,10 @@ function setup() {
 
   BALLS.push(createBall());
 
-  background(0);
-  noStroke();
-  fill(255);
-  circle(200, 200, 255);
+  // background(0);
+  // noStroke();
+  // fill(255);
+  // circle(200, 200, 255);
 
   setInterval(refreshSnakeFood(), 10000);
 
@@ -270,10 +324,11 @@ function draw() {
     pong: PONG
   };
 
-  objects.forEach((obj) => {
-    obj.tick();
-  })
+  // objects.forEach((obj) => {
+  //   obj.tick();
+  // })
 
+  //Uradi collisione ako postoje
   Object.keys(COLLISIONS).forEach((collisionName) => { //Uradi funkciju u colluion nizu evenata
     COLLISIONS[collisionName](objects);
   })
@@ -453,28 +508,28 @@ function draw() {
   // }
 
   // Udarac zmije u kocku
-  for (let i = 0; i < squares.length; i++) {
-    if (squares[i].exists) {
-      if (squares[i].x < SNAKE_BODY[0].x + SNAKE_BODY[0].size &&
-        squares[i].x + squares[i].size > SNAKE_BODY[0].x &&
-        squares[i].y < SNAKE_BODY[0].y + SNAKE_BODY[0].size &&
-        squares[i].y + squares[i].size > SNAKE_BODY[0].y) {
-        SNAKE_BODY[0].dir = 'none';
-        SNAKE_BODY[0].alive = false;
-        SNAKE_BODY[0].speed = 0;
-      }
-    }
-  }
+  // for (let i = 0; i < squares.length; i++) {
+  //   if (squares[i].exists) {
+  //     if (squares[i].x < SNAKE_BODY[0].x + SNAKE_BODY[0].size &&
+  //       squares[i].x + squares[i].size > SNAKE_BODY[0].x &&
+  //       squares[i].y < SNAKE_BODY[0].y + SNAKE_BODY[0].size &&
+  //       squares[i].y + squares[i].size > SNAKE_BODY[0].y) {
+  //       SNAKE_BODY[0].dir = 'none';
+  //       SNAKE_BODY[0].alive = false;
+  //       SNAKE_BODY[0].speed = 0;
+  //     }
+  //   }
+  // }
 
-  // Udarac lopte u zmiju
-  for (let i = 0; i < SNAKE_BODY.length; i++) {
-    if (ball.y > SNAKE_BODY[i].y && ball.y < SNAKE_BODY[i].y + SNAKE_BODY[i].size && ball.x > SNAKE_BODY[i].x && ball.x < SNAKE_BODY[i].x + SNAKE_BODY[i].size) {
-      SNAKE_BODY[0].dir = 'none';
-      SNAKE_BODY[0].alive = false;
-      SNAKE_BODY[0].speed = 0;
-      console.log('hit')
-    }
-  }
+  // // Udarac lopte u zmiju
+  // for (let i = 0; i < SNAKE_BODY.length; i++) {
+  //   if (ball.y > SNAKE_BODY[i].y && ball.y < SNAKE_BODY[i].y + SNAKE_BODY[i].size && ball.x > SNAKE_BODY[i].x && ball.x < SNAKE_BODY[i].x + SNAKE_BODY[i].size) {
+  //     SNAKE_BODY[0].dir = 'none';
+  //     SNAKE_BODY[0].alive = false;
+  //     SNAKE_BODY[0].speed = 0;
+  //     console.log('hit')
+  //   }
+  // }
 
   if (SNAKE_BODY[0].alive === false) {
     winner.textContent = 'PONG WINS'
